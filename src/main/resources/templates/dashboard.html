@@ -50,14 +50,14 @@
         <thead>
         <tr>
             <th>Short link</th>
-            <th>Long URL</th>
+            <th>Long URL(s)</th>
             <th class="count">Visits</th>
         </tr>
         </thead>
         <tbody>
         <tr th:each="link : ${links}" class="link-row">
             <td><a class="code" th:href="@{/dashboard/{code}(code=${link.code})}"><code th:text="'/' + ${link.code}"></code></a></td>
-            <td class="long-url" th:text="${link.longUrl}"></td>
+            <td class="long-url"><div th:each="url : ${link.longUrls}" th:text="${url}"></div></td>
             <td class="count" th:text="${link.visitCount}"></td>
         </tr>
         </tbody>

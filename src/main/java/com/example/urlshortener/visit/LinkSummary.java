@@ -1,5 +1,7 @@
 package com.example.urlshortener.visit;
 
-/** One row of the dashboard: a short link, where it goes, and how many times it was visited. */
-public record LinkSummary(String code, String longUrl, long visitCount) {
+import java.util.List;
+
+/** One row of the "By short link" table: a short link, where it goes (1 to 5 URLs), and its visit count. */
+public record LinkSummary(String code, List<String> longUrls, long visitCount) {
 }

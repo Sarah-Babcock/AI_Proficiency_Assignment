@@ -3,7 +3,9 @@ package com.example.urlshortener.web;
 import com.example.urlshortener.link.CodeTakenException;
 import com.example.urlshortener.link.LinkService;
 import com.example.urlshortener.link.ShortLink;
+import com.example.urlshortener.link.TooManyUrlsException;
 import com.example.urlshortener.link.UrlEndingChecker;
+import com.example.urlshortener.link.UrlListParser;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -11,6 +13,8 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 /** The page where support agents create short links. */
@@ -28,6 +32,9 @@ public class HomeController {
         return "home";
     }
 
+    /**
+     * @param longUrl one URL, or up to 5 separated by new lines and/or commas
+     */
     @PostMapping("/")
     public String createLink(@RequestParam(defaultValue = "") String longUrl,
                              @RequestParam(defaultValue = "") String customCode,
@@ -37,36 +44,48 @@ public class HomeController {
         model.addAttribute("longUrl", longUrl);
         model.addAttribute("customCode", customCode);
 
-        if (longUrl.isBlank()) {
+        List<String> urls = UrlListParser.parse(longUrl);
+        if (urls.isEmpty()) {
             model.addAttribute("error", "Please enter a URL to shorten.");
             return "home";
         }
 
         // Unusual ending (often a typo): ask the agent to confirm before creating the link.
         if (!confirmed) {
-            Optional<String> unusual = UrlEndingChecker.unusualEnding(longUrl);
-            if (unusual.isPresent()) {
-                String typed = longUrl.trim();
-                String why = unusual.get().isEmpty()
-                        ? "\"" + typed + "\" doesn't have an ending like .com."
-                        : "\"" + typed + "\" has an unusual ending (." + unusual.get() + ").";
-                model.addAttribute("warning", "Are you sure this is what you meant? " + why);
+            Optional<String> warning = unusualEndingWarning(urls);
+            if (warning.isPresent()) {
+                model.addAttribute("warning", warning.get());
                 return "home";
             }
         }
 
         try {
-            ShortLink link = linkService.create(longUrl.trim(), customCode);
+            ShortLink link = linkService.create(urls, customCode);
             String shortUrl = ServletUriComponentsBuilder.fromCurrentContextPath()
                     .path("/{code}")
                     .buildAndExpand(link.getCode())
                     .toUriString();
             model.addAttribute("shortUrl", shortUrl);
+            model.addAttribute("urlCount", link.getLongUrls().size());
             model.addAttribute("longUrl", "");
             model.addAttribute("customCode", "");
-        } catch (CodeTakenException e) {
+        } catch (CodeTakenException | TooManyUrlsException e) {
             model.addAttribute("error", e.getMessage());
         }
         return "home";
+    }
+
+    /** Builds one warning naming every URL with an unusual (or missing) ending, or empty if none. */
+    private static Optional<String> unusualEndingWarning(List<String> urls) {
+        List<String> problems = new ArrayList<>();
+        for (String url : urls) {
+            UrlEndingChecker.unusualEnding(url).ifPresent(ending -> problems.add(ending.isEmpty()
+                    ? "\"" + url + "\" doesn't have an ending like .com."
+                    : "\"" + url + "\" has an unusual ending (." + ending + ")."));
+        }
+        if (problems.isEmpty()) {
+            return Optional.empty();
+        }
+        return Optional.of("Are you sure this is what you meant? " + String.join(" ", problems));
     }
 }

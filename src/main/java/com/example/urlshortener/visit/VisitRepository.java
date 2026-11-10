@@ -1,5 +1,6 @@
 package com.example.urlshortener.visit;
 
+import com.example.urlshortener.link.ShortLink;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
@@ -16,14 +17,24 @@ public interface VisitRepository extends JpaRepository<Visit, Long> {
     List<Visit> findByCodeNewestFirst(String code);
 
     /**
-     * Every link with its visit count, most visited first.
+     * Every link paired with its visit count, most visited first.
      * A left join keeps links with no visits, so they show a count of 0.
      */
     @Query("""
-            select new com.example.urlshortener.visit.LinkSummary(l.code, l.longUrl, count(v))
+            select l, count(v)
             from ShortLink l left join Visit v on v.shortLink = l
-            group by l.id, l.code, l.longUrl, l.createdAt
+            group by l
             order by count(v) desc, l.createdAt desc
             """)
-    List<LinkSummary> summarizeAllLinks();
+    List<Object[]> countVisitsPerLink();
+
+    /** Every link with its URLs and visit count, most visited first. */
+    default List<LinkSummary> summarizeAllLinks() {
+        return countVisitsPerLink().stream()
+                .map(row -> {
+                    ShortLink link = (ShortLink) row[0];
+                    return new LinkSummary(link.getCode(), link.getLongUrls(), (Long) row[1]);
+                })
+                .toList();
+    }
 }

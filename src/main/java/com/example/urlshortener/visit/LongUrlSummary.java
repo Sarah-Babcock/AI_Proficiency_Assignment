@@ -13,13 +13,17 @@ public record LongUrlSummary(String longUrl, List<String> codes, long totalVisit
 
     /**
      * Groups per-link rows by long URL, most visited first.
+     * A multi-URL link counts toward each of its URLs: one visit to a 3-URL link adds 1 to all 3.
      * URLs are normalized first, so an old "google.com" link and a new "https://google.com" link
      * count as the same URL.
      */
     public static List<LongUrlSummary> groupByLongUrl(List<LinkSummary> links) {
         Map<String, List<LinkSummary>> byUrl = new LinkedHashMap<>();
         for (LinkSummary link : links) {
-            byUrl.computeIfAbsent(UrlNormalizer.normalize(link.longUrl()), url -> new ArrayList<>()).add(link);
+            link.longUrls().stream()
+                    .map(UrlNormalizer::normalize)
+                    .distinct()
+                    .forEach(url -> byUrl.computeIfAbsent(url, u -> new ArrayList<>()).add(link));
         }
         return byUrl.entrySet().stream()
                 .map(entry -> new LongUrlSummary(

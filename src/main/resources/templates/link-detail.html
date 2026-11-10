@@ -16,7 +16,7 @@
 <body>
 <p><a href="/dashboard">&#8592; Back to dashboard</a></p>
 <h1>Visits to <code id="code" th:text="'/' + ${link.code}"></code></h1>
-<p>Goes to: <span class="long-url" id="longUrl" th:text="${link.longUrl}"></span></p>
+<p>Goes to: <span class="long-url" id="longUrl"><span th:each="url, stat : ${link.longUrls}"><span class="url" th:text="${url}"></span><br th:unless="${stat.last}"/></span></span></p>
 <p>Total visits: <strong id="visitCount" th:text="${#lists.size(visitTimes)}"></strong></p>
 
 <p id="noVisits" th:if="${#lists.isEmpty(visitTimes)}">This link hasn't been visited yet.</p>

@@ -44,7 +44,7 @@ class HomeControllerTest {
     void pageShowsFormWithCustomCodeBoxHidden() throws Exception {
         mvc.perform(get("/"))
                 .andExpect(status().isOk())
-                .andExpect(xpath("//input[@id='longUrl']").exists())
+                .andExpect(xpath("//textarea[@id='longUrl']").exists())
                 .andExpect(xpath("//button[@id='useCustomCode']").string("Use a custom code"))
                 .andExpect(xpath("//button[@type='submit']").string("Generate"))
                 .andExpect(xpath("//div[@id='customCodeSection']/@hidden").exists());
@@ -76,7 +76,7 @@ class HomeControllerTest {
         mvc.perform(post("/").param("longUrl", "https://example.com/second").param("customCode", "reset"))
                 .andExpect(status().isOk())
                 .andExpect(xpath("//div[@id='error']").string(containsString("already taken")))
-                .andExpect(xpath("//input[@id='longUrl']/@value").string("https://example.com/second"))
+                .andExpect(xpath("//textarea[@id='longUrl']").string("https://example.com/second"))
                 .andExpect(xpath("//input[@id='customCode']/@value").string("reset"))
                 .andExpect(xpath("//div[@id='customCodeSection']/@hidden").doesNotExist())
                 .andExpect(content().string(not(containsString("id=\"shortUrl\""))));
@@ -96,7 +96,7 @@ class HomeControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(xpath("//div[@id='warning']").string(containsString("Are you sure this is what you meant?")))
                 .andExpect(xpath("//div[@id='warning']").string(containsString("unusual ending (.cm)")))
-                .andExpect(xpath("//input[@id='longUrl']/@value").string("google.cm"))
+                .andExpect(xpath("//textarea[@id='longUrl']").string("google.cm"))
                 .andExpect(xpath("//input[@id='customCode']/@value").string("goog"))
                 .andExpect(xpath("//div[@id='shortUrl']").doesNotExist());
 
