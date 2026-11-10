@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <title>URL Shortener</title>
+    <style>
+        body { font-family: system-ui, sans-serif; max-width: 560px; margin: 40px auto; padding: 0 16px; color: #1f2328; background: #fff; }
+        h1 { font-size: 1.5rem; }
+        label { display: block; font-weight: 600; margin: 16px 0 4px; }
+        input[type=text] { width: 100%; padding: 8px; font-size: 1rem; box-sizing: border-box; border: 1px solid #8c959f; border-radius: 6px; }
+        button { margin-top: 16px; padding: 8px 16px; font-size: 1rem; border-radius: 6px; border: 1px solid #8c959f; background: #f6f8fa; cursor: pointer; }
+        button.primary { background: #1f6feb; border-color: #1f6feb; color: #fff; }
+        .error { margin-top: 16px; padding: 12px; border-radius: 6px; background: #ffebe9; color: #82071e; }
+        .result { margin-top: 24px; padding: 16px; border-radius: 6px; background: #dafbe1; }
+        .short-url { font-size: 1.4rem; font-family: ui-monospace, monospace; word-break: break-all; }
+        .copied { margin-left: 8px; color: #1a7f37; }
+        .warning { margin-top: 16px; padding: 12px; border-radius: 6px; background: #fff8c5; color: #4d2d00; }
+        .warning .hint { margin-top: 8px; font-size: 0.9rem; }
+    </style>
+</head>
+<body>
+<h1>Shorten a link</h1>
+
+<form method="post" action="/">
+    <label for="longUrl">Long URL</label>
+    <input type="text" id="longUrl" name="longUrl" required="required"
+           placeholder="https://example.com/some/long/page" th:value="${longUrl}"/>
+
+    <button type="button" id="useCustomCode">Use a custom code</button>
+
+    <div id="customCodeSection" th:attr="hidden=${#strings.isEmpty(customCode)} ? 'hidden' : null">
+        <label for="customCode">Custom code</label>
+        <input type="text" id="customCode" name="customCode"
+               placeholder="e.g. reset" th:value="${customCode}"/>
+    </div>
+
+    <div>
+        <button type="submit" class="primary">Generate</button>
+    </div>
+
+    <div class="warning" id="warning" th:if="${warning}">
+        <div th:text="${warning}"></div>
+        <button type="submit" id="confirmButton" name="confirmed" value="true">Yes, create it</button>
+        <div class="hint">Or fix the URL above and click Generate.</div>
+    </div>
+</form>
+
+<div class="error" id="error" th:if="${error}" th:text="${error}"></div>
+
+<div class="result" th:if="${shortUrl}">
+    <div>Your short link:</div>
+    <div class="short-url" id="shortUrl" th:text="${shortUrl}"></div>
+    <button type="button" id="copyButton">Copy</button>
+    <span class="copied" id="copied" hidden="hidden">Copied!</span>
+</div>
+
+<script>
+    document.getElementById("useCustomCode").addEventListener("click", function () {
+        document.getElementById("customCodeSection").hidden = false;
+        document.getElementById("customCode").focus();
+    });
+
+    var copyButton = document.getElementById("copyButton");
+    if (copyButton) {
+        copyButton.addEventListener("click", function () {
+            var text = document.getElementById("shortUrl").textContent;
+            navigator.clipboard.writeText(text).then(function () {
+                document.getElementById("copied").hidden = false;
+            });
+        });
+    }
+</script>
+</body>
+</html>

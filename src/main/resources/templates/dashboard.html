@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <title>Link Dashboard</title>
+    <style>
+        body { font-family: system-ui, sans-serif; max-width: 900px; margin: 40px auto; padding: 0 16px; color: #1f2328; background: #fff; }
+        h1 { font-size: 1.5rem; }
+        h2 { font-size: 1.15rem; margin-top: 32px; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { text-align: left; padding: 8px; border-bottom: 1px solid #d0d7de; vertical-align: top; }
+        th { background: #f6f8fa; }
+        td.count, th.count { text-align: right; white-space: nowrap; }
+        td.long-url { word-break: break-all; }
+        code { font-family: ui-monospace, monospace; }
+        .table-wrap { overflow-x: auto; }
+    </style>
+</head>
+<body>
+<h1>Link dashboard</h1>
+<p><a href="/">Shorten a link</a></p>
+
+<p id="empty" th:if="${#lists.isEmpty(links)}">No short links yet.</p>
+
+<div th:unless="${#lists.isEmpty(links)}">
+<h2>By long URL</h2>
+<div class="table-wrap">
+    <table id="longUrls">
+        <thead>
+        <tr>
+            <th>Long URL</th>
+            <th>Short links</th>
+            <th class="count">Total visits</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="row : ${longUrls}" class="long-url-row">
+            <td class="long-url" th:text="${row.longUrl}"></td>
+            <td class="codes"><span th:each="code, stat : ${row.codes}"><a th:href="@{/dashboard/{code}(code=${code})}"><code th:text="'/' + ${code}"></code></a><span th:unless="${stat.last}">, </span></span></td>
+            <td class="count" th:text="${row.totalVisits}"></td>
+        </tr>
+        </tbody>
+    </table>
+</div>
+
+<h2>By short link</h2>
+<div class="table-wrap">
+    <table id="links">
+        <thead>
+        <tr>
+            <th>Short link</th>
+            <th>Long URL</th>
+            <th class="count">Visits</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="link : ${links}" class="link-row">
+            <td><a class="code" th:href="@{/dashboard/{code}(code=${link.code})}"><code th:text="'/' + ${link.code}"></code></a></td>
+            <td class="long-url" th:text="${link.longUrl}"></td>
+            <td class="count" th:text="${link.visitCount}"></td>
+        </tr>
+        </tbody>
+    </table>
+</div>
+</div>
+</body>
+</html>

@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <title>Link Visits</title>
+    <style>
+        body { font-family: system-ui, sans-serif; max-width: 900px; margin: 40px auto; padding: 0 16px; color: #1f2328; background: #fff; }
+        h1 { font-size: 1.5rem; }
+        code { font-family: ui-monospace, monospace; }
+        .long-url { word-break: break-all; }
+        ol { padding-left: 24px; }
+        li { padding: 4px 0; }
+    </style>
+</head>
+<body>
+<p><a href="/dashboard">&#8592; Back to dashboard</a></p>
+<h1>Visits to <code id="code" th:text="'/' + ${link.code}"></code></h1>
+<p>Goes to: <span class="long-url" id="longUrl" th:text="${link.longUrl}"></span></p>
+<p>Total visits: <strong id="visitCount" th:text="${#lists.size(visitTimes)}"></strong></p>
+
+<p id="noVisits" th:if="${#lists.isEmpty(visitTimes)}">This link hasn't been visited yet.</p>
+<ol id="visits" th:unless="${#lists.isEmpty(visitTimes)}">
+    <li th:each="time : ${visitTimes}" th:text="${time}"></li>
+</ol>
+</body>
+</html>
