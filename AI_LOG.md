@@ -1,6 +1,6 @@
 # AI Usage Log
 
-Fill this in as you go, not at the end. One row per AI task.
+Every task I gave the AI, my acceptance criteria, and whether I accepted, edited or rejected the result. Below the task log are the decisions I made along the way.
 
 | # | Date | Task (what I asked the AI to do) | My acceptance criteria | Result: Accepted / Edited / Rejected | Why (my reasoning) |
 |---|------|----------------------------------|------------------------|--------------------------------------|--------------------|
