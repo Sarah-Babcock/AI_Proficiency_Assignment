@@ -313,7 +313,7 @@ There was no product owner to answer the questions in [PLAN.md](PLAN.md), so I m
 - **Near-identical URLs count separately** on the dashboard, e.g. `https://google.com` vs `https://google.com/`.
 - **The ending check looks only at the last part of the site name.** It can't tell whether a site actually exists, and every `.co.uk` site triggers the warning.
 - **Unlimited retries for random codes.** If nearly every code were taken, creating a link could loop for a long time. Not a risk at about 30 billion codes; I chose not to add a retry cap for v1.
-- **Static analysis (e.g. SpotBugs) isn't part of the build yet.** It's the next quality gate I'd add.
+- **Quality gates beyond tests and coverage aren't in the build yet:** static analysis (e.g. SpotBugs), a dependency vulnerability scan, and a performance test of the redirect. They're the next gates I'd add.
 - **H2 file database, single process.** Only one copy of the app can run at a time, because the file is locked. A production version would use a database server such as PostgreSQL.
 - **`docs/openapi.json` is a saved copy.** If the API changes, it must be saved again from `/v3/api-docs`; the live Swagger page is always current.
 - **Visit times are shown in the server's time zone** on the dashboard; the API returns them in UTC.
