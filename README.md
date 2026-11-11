@@ -90,7 +90,7 @@ Data is stored in `data/urlshortener.mv.db`. Delete that file to start with an e
 
 The web form and the API are two front doors to the same `LinkService`, so every rule (the 5-URL limit, custom-code rules, taken and reserved codes, the unusual-ending check) works the same way in both.
 
-**Tools:** Java 21, Spring Boot 3.3 (Web, Data JPA, Thymeleaf), springdoc-openapi (Swagger UI), H2 (file mode), JUnit 5, MockMvc, AssertJ.
+**Tools:** Java 21, Spring Boot 3.3 (Web, Data JPA, Thymeleaf), springdoc-openapi (Swagger UI), H2 (file mode), JUnit 5, MockMvc, AssertJ, JaCoCo (coverage).
 
 ### Control flow
 
@@ -281,6 +281,8 @@ Each scenario follows the same loop: I break the work into small tasks, the AI d
 Tests use their own database under `target/test-data/`, so they never touch real data.
 
 **Hand checks** (things automated tests can't easily cover): the Copy button puts the link on the clipboard; a link made in the form opens the real site in a browser; links still work after restarting the app; "Open all" opens every tab; the dashboard looks right; the API works from Swagger UI.
+
+**Quality gate: coverage.** Every `./mvnw clean verify` also measures how much of the code the tests run (JaCoCo). The build **fails** if coverage drops below **90% of lines or 80% of branches**. Today it's 94% of lines and 86% of branches. To see which lines are tested, open `target/site/jacoco/index.html` after a build.
 
 **Lesson from review:** once, the AI reported a passing build when 4 new tests had actually errored. After that, I checked the full test summary (`Tests run: N, Failures: 0, Errors: 0`) rather than trusting a short "OK."
 
