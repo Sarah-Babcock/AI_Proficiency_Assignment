@@ -52,7 +52,7 @@ public class LinkApiController {
             description = "1 to 5 URLs. A URL with an unusual ending (anything but .com .org .gov .net .edu .io) "
                     + "is rejected unless \"confirmed\" is true.")
     @ApiResponse(responseCode = "201", description = "Created")
-    @ApiResponse(responseCode = "400", description = "No URLs, more than 5 URLs, unusual ending not confirmed, or malformed JSON",
+    @ApiResponse(responseCode = "400", description = "No URLs, more than 5 URLs, invalid custom code, unusual ending not confirmed, or malformed JSON",
             content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     @ApiResponse(responseCode = "409", description = "Custom code already taken or reserved",
             content = @Content(schema = @Schema(implementation = ErrorResponse.class)))

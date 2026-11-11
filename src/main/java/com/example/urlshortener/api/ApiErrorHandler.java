@@ -1,6 +1,7 @@
 package com.example.urlshortener.api;
 
 import com.example.urlshortener.link.CodeTakenException;
+import com.example.urlshortener.link.InvalidCodeException;
 import com.example.urlshortener.link.TooManyUrlsException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -20,6 +21,11 @@ class ApiErrorHandler {
     @ExceptionHandler(TooManyUrlsException.class)
     ResponseEntity<ErrorResponse> tooManyUrls(TooManyUrlsException e) {
         return ResponseEntity.badRequest().body(new ErrorResponse("too_many_urls", e.getMessage()));
+    }
+
+    @ExceptionHandler(InvalidCodeException.class)
+    ResponseEntity<ErrorResponse> invalidCode(InvalidCodeException e) {
+        return ResponseEntity.badRequest().body(new ErrorResponse("invalid_code", e.getMessage()));
     }
 
     @ExceptionHandler(CodeTakenException.class)

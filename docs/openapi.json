@@ -47,7 +47,7 @@
                         }
                     },
                     "400": {
-                        "description": "No URLs, more than 5 URLs, unusual ending not confirmed, or malformed JSON",
+                        "description": "No URLs, more than 5 URLs, invalid custom code, unusual ending not confirmed, or malformed JSON",
                         "content": {
                             "*/*": {
                                 "schema": {
@@ -167,7 +167,7 @@
                     },
                     "customCode": {
                         "type": "string",
-                        "description": "Optional custom code, e.g. \"reset\". Omit for a random 6-character code.",
+                        "description": "Optional custom code, e.g. \"reset\": up to 12 letters, numbers and dashes. Omit for a random 6-character code.",
                         "nullable": true,
                         "example": "reset"
                     },

@@ -1,6 +1,7 @@
 package com.example.urlshortener.web;
 
 import com.example.urlshortener.link.CodeTakenException;
+import com.example.urlshortener.link.InvalidCodeException;
 import com.example.urlshortener.link.LinkService;
 import com.example.urlshortener.link.ShortLink;
 import com.example.urlshortener.link.TooManyUrlsException;
@@ -68,7 +69,7 @@ public class HomeController {
             model.addAttribute("urlCount", link.getLongUrls().size());
             model.addAttribute("longUrl", "");
             model.addAttribute("customCode", "");
-        } catch (CodeTakenException | TooManyUrlsException e) {
+        } catch (CodeTakenException | InvalidCodeException | TooManyUrlsException e) {
             model.addAttribute("error", e.getMessage());
         }
         return "home";

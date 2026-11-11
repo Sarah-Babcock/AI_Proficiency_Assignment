@@ -55,7 +55,7 @@ Data is stored in `data/urlshortener.mv.db`. Delete that file to start with an e
 | | `DashboardController` + `dashboard.html`, `link-detail.html` | Visit counts by long URL and by short link; each link's visit dates and times |
 | API | `LinkApiController` | JSON endpoints under `/api/links` (see [API](#api)) |
 | | `ApiErrorHandler` | Turns errors into `{"error", "message"}` with the right HTTP status |
-| Links | `LinkService` | Creates links: 1–5 URLs; custom code (blocked if taken or reserved) or random code (regenerated if taken) |
+| Links | `LinkService` | Creates links: 1–5 URLs; custom code (up to 12 letters, numbers and dashes; blocked if taken or reserved) or random code (regenerated if taken) |
 | | `CodeGenerator` | Random 6-character codes without easily confused characters |
 | | `UrlListParser` | Splits the form's box into URLs by new lines and commas |
 | | `UrlNormalizer` | Adds `https://` when the agent leaves it off |
@@ -64,7 +64,7 @@ Data is stored in `data/urlshortener.mv.db`. Delete that file to start with an e
 | | `VisitRepository`, `LinkSummary`, `LongUrlSummary` | Dashboard queries: counts per link (including 0) and grouped by long URL |
 | Storage | `ShortLink`, `Visit`, plus repositories | H2 file database via Spring Data JPA (see [Data model](#data-model)) |
 
-The web form and the API are two front doors to the same `LinkService`, so every rule (the 5-URL limit, taken and reserved codes, the unusual-ending check) works the same way in both.
+The web form and the API are two front doors to the same `LinkService`, so every rule (the 5-URL limit, custom-code rules, taken and reserved codes, the unusual-ending check) works the same way in both.
 
 **Tools:** Java 21, Spring Boot 3.3 (Web, Data JPA, Thymeleaf), springdoc-openapi (Swagger UI), H2 (file mode), JUnit 5, MockMvc, AssertJ.
 
@@ -80,7 +80,8 @@ Agent submits form ─► HomeController
     └─ LinkService.create
          ├─ UrlNormalizer: add https:// if missing; drop duplicates
          ├─ more than 5 URLs? ─────────────────► "up to 5 URLs" (nothing saved)
-         ├─ custom code? ─ reserved or taken ──► "already taken / reserved" (nothing saved)
+         ├─ custom code? ─ over 12 characters or not letters/numbers/dashes ─► "Custom codes can be..." (nothing saved)
+         │               ├─ reserved or taken ──► "already taken / reserved" (nothing saved)
          │               └─ free ─────────────► save
          └─ no custom code ─► CodeGenerator ─► taken? regenerate ─► save
     ─► page shows the short URL + Copy button
@@ -102,7 +103,7 @@ Full contract: [docs/openapi.json](docs/openapi.json) (OpenAPI 3). While the app
 
 | Endpoint | Success | Errors |
 |----------|---------|--------|
-| `POST /api/links` | **201** with `code`, `shortUrl`, `longUrls`, `createdAt`, and a `Location` header | **400** `no_urls`, `too_many_urls`, `unusual_url_ending`, `invalid_json`; **409** `code_taken` |
+| `POST /api/links` | **201** with `code`, `shortUrl`, `longUrls`, `createdAt`, and a `Location` header | **400** `no_urls`, `too_many_urls`, `invalid_code`, `unusual_url_ending`, `invalid_json`; **409** `code_taken` |
 | `GET /api/links/{code}` | **200** with the link's details | **404** `not_found` |
 | `GET /api/links/{code}/visits` | **200** with `visitCount` and `visits` (times, newest first) | **404** `not_found` |
 
@@ -147,6 +148,7 @@ I planned first ([PLAN.md](PLAN.md)): who uses the system, the end-to-end flow, 
 | Random code already taken | Quietly regenerate | The agent didn't choose it, so an error would only confuse them |
 | Redirect type | 302 (temporary), not 301 | Browsers cache 301s and skip the server, which would make visit counts too low |
 | Invalid URLs | Warn and ask for confirmation, rather than block or allow silently | Real sites with other endings (e.g. `.co.uk`) still work, and typos are caught before the agent reads a bad link to a client |
+| Custom code rules | Up to 12 characters: letters, numbers and dashes only | <!-- your reason --> |
 | Reserved codes `dashboard`, `swagger-ui.html` | Blocked as custom codes | A short link at those addresses could never be reached, because an app page already uses them |
 | Multi-URL links | Up to 5 URLs, split by new lines or any comma | Simple for agents; 1 URL behaves exactly as before |
 | Visits to a multi-URL link | 1 for the short link, +1 for each of its URLs in "By long URL" | <!-- your reason --> |
@@ -166,6 +168,7 @@ The shorten form, with custom or random codes, and the redirect. Then visit trac
 - **Enhancement:** a dashboard view by long URL that lists every short link pointing to the same URL, with total visits. (Row 13)
 - **Enhancement:** one short link for up to 5 URLs, with an "Open all" page. Impacted: `ShortLink` (new extra-URL table, no migration for old links), `LinkService`, the form (now a text box that takes several URLs), `RedirectController` plus a new page, the dashboard queries and pages, and 3 existing tests. Verified against a copy of the real database that old links still work. (Row 17)
 - **Enhancement:** a JSON API with OpenAPI docs, added as a new layer over the existing `LinkService`. The warning text moved from the form's controller into `UrlEndingChecker` so the form and API share it; the form's behaviour is unchanged and all earlier tests still pass. (Row 18)
+- **Bug fix:** custom codes had almost no rules, so an agent could create a link the client couldn't open (`reset password`, `help/login`). Fix: custom codes must be up to 12 letters, numbers and dashes, in both the form and the API. Existing links with old-style codes still open. (Row 20)
 
 ### Ambiguous: what counts as an invalid URL?
 - **Options:** strict (allow only common endings), loose (allow anything), or warn.
@@ -176,13 +179,13 @@ The shorten form, with custom or random codes, and the redirect. Then visit trac
 
 ## Testing approach
 
-**63 automated tests**, run with `./mvnw clean verify`. Each test maps to an acceptance criterion I set before the code was written. Most are labelled `// Check N` to match the AI_LOG row.
+**75 automated tests**, run with `./mvnw clean verify`. Each test maps to an acceptance criterion I set before the code was written. Most are labelled `// Check N` to match the AI_LOG row.
 
 | Level | What's covered | Examples |
 |-------|----------------|----------|
 | Unit | Pure logic, no Spring | `CodeGeneratorTest` (1,000 codes: length and banned characters), `UrlNormalizerTest`, `UrlEndingCheckerTest`, `UrlListParserTest` |
 | Integration (Spring + H2) | Saving and looking up links | `ShortLinkRepositoryTest`, `LinkServiceTest` (taken codes; a forced random-code clash regenerates) |
-| Web (MockMvc + real database) | Pages and redirects end to end | `HomeControllerTest`, `RedirectControllerTest`, `VisitTrackingTest`, `DashboardTest`, `MultiUrlTest` |
+| Web (MockMvc + real database) | Pages and redirects end to end | `HomeControllerTest`, `RedirectControllerTest`, `VisitTrackingTest`, `DashboardTest`, `MultiUrlTest`, `CustomCodeRulesTest` |
 | API (MockMvc + real database) | JSON requests, status codes, error shape | `LinkApiTest` |
 
 Tests use their own database under `target/test-data/`, so they never touch real data.
@@ -197,7 +200,7 @@ Tests use their own database under `target/test-data/`, so they never touch real
 
 - **No login.** Anyone who can reach the app or the API can create links and see the dashboard. Fine for a local prototype; a real deployment would need authentication.
 - **Mixed-case codes** can be confusing over the phone ("capital K or lowercase k?"). This is accepted for v1; codes could be made one case, at the cost of fewer possible codes.
-- **Few rules on custom codes** beyond "not taken" and "not reserved." Spaces, slashes or very long codes aren't rejected, and a code containing `/` would not be reachable.
+- **Custom codes made only of dashes** (e.g. `---`) are allowed, since they fit the rule; they're valid but hard to read aloud.
 - **A URL containing a comma gets split** into two URLs, because any comma separates URLs in the form. The API takes a list, so it isn't affected.
 - **Near-identical URLs count separately** on the dashboard, e.g. `https://google.com` vs `https://google.com/`.
 - **The ending check looks only at the last part of the site name.** It can't tell whether a site actually exists, and every `.co.uk` site triggers the warning.

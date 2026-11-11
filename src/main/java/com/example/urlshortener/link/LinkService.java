@@ -8,6 +8,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
+import java.util.regex.Pattern;
 
 /** Creates short links, with either a custom code or a random one. */
 @Service
@@ -15,6 +16,12 @@ public class LinkService {
 
     /** The most URLs one short link can open. */
     public static final int MAX_URLS = 5;
+
+    /** The longest custom code an agent can choose. */
+    public static final int MAX_CODE_LENGTH = 12;
+
+    /** Custom codes: letters, numbers and dashes only, 1 to {@value #MAX_CODE_LENGTH} characters. */
+    private static final Pattern CUSTOM_CODE = Pattern.compile("[A-Za-z0-9-]{1," + MAX_CODE_LENGTH + "}");
 
     /**
      * Codes the app uses for its own pages. A short link with one of these codes could never
@@ -42,6 +49,7 @@ public class LinkService {
      *                   https:// is added where missing, and duplicates are dropped
      * @param customCode the code the agent typed, or null/blank to get a random one
      * @throws TooManyUrlsException if there are more than {@value #MAX_URLS} different URLs
+     * @throws InvalidCodeException if the custom code is too long or has characters other than letters, numbers and dashes
      * @throws CodeTakenException   if the custom code is reserved or already used by another link
      */
     public ShortLink create(List<String> longUrls, String customCode) {
@@ -69,6 +77,9 @@ public class LinkService {
     }
 
     private ShortLink createWithCustomCode(List<String> urls, String code) {
+        if (!CUSTOM_CODE.matcher(code).matches()) {
+            throw new InvalidCodeException();
+        }
         if (RESERVED_CODES.contains(code.toLowerCase(Locale.ROOT))) {
             throw CodeTakenException.reserved(code);
         }
