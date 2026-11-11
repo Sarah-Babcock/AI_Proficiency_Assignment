@@ -55,7 +55,7 @@ Data is stored in `data/urlshortener.mv.db`. Delete that file to start with an e
 | | `DashboardController` + `dashboard.html`, `link-detail.html` | Visit counts by long URL and by short link; each link's visit dates and times |
 | API | `LinkApiController` | JSON endpoints under `/api/links` (see [API](#api)) |
 | | `ApiErrorHandler` | Turns errors into `{"error", "message"}` with the right HTTP status |
-| Links | `LinkService` | Creates links: 1–5 URLs; custom code (up to 12 letters, numbers and dashes; blocked if taken or reserved) or random code (regenerated if taken) |
+| Links | `LinkService` | Creates links: 1–5 URLs; custom code (up to 20 letters, numbers and dashes; blocked if taken or reserved) or random code (regenerated if taken) |
 | | `CodeGenerator` | Random 6-character codes without easily confused characters |
 | | `UrlListParser` | Splits the form's box into URLs by new lines and commas |
 | | `UrlNormalizer` | Adds `https://` when the agent leaves it off |
@@ -80,7 +80,7 @@ Agent submits form ─► HomeController
     └─ LinkService.create
          ├─ UrlNormalizer: add https:// if missing; drop duplicates
          ├─ more than 5 URLs? ─────────────────► "up to 5 URLs" (nothing saved)
-         ├─ custom code? ─ over 12 characters or not letters/numbers/dashes ─► "Custom codes can be..." (nothing saved)
+         ├─ custom code? ─ over 20 characters or not letters/numbers/dashes ─► "Custom codes can be..." (nothing saved)
          │               ├─ reserved or taken ──► "already taken / reserved" (nothing saved)
          │               └─ free ─────────────► save
          └─ no custom code ─► CodeGenerator ─► taken? regenerate ─► save
@@ -148,7 +148,7 @@ I planned first ([PLAN.md](PLAN.md)): who uses the system, the end-to-end flow, 
 | Random code already taken | Quietly regenerate | The agent didn't choose it, so an error would only confuse them |
 | Redirect type | 302 (temporary), not 301 | Browsers cache 301s and skip the server, which would make visit counts too low |
 | Invalid URLs | Warn and ask for confirmation, rather than block or allow silently | Real sites with other endings (e.g. `.co.uk`) still work, and typos are caught before the agent reads a bad link to a client |
-| Custom code rules | Up to 12 characters: letters, numbers and dashes only | <!-- your reason --> |
+| Custom code rules | Up to 20 characters: letters, numbers and dashes only | <!-- your reason --> |
 | Reserved codes `dashboard`, `swagger-ui.html` | Blocked as custom codes | A short link at those addresses could never be reached, because an app page already uses them |
 | Multi-URL links | Up to 5 URLs, split by new lines or any comma | Simple for agents; 1 URL behaves exactly as before |
 | Visits to a multi-URL link | 1 for the short link, +1 for each of its URLs in "By long URL" | <!-- your reason --> |
@@ -168,7 +168,7 @@ The shorten form, with custom or random codes, and the redirect. Then visit trac
 - **Enhancement:** a dashboard view by long URL that lists every short link pointing to the same URL, with total visits. (Row 13)
 - **Enhancement:** one short link for up to 5 URLs, with an "Open all" page. Impacted: `ShortLink` (new extra-URL table, no migration for old links), `LinkService`, the form (now a text box that takes several URLs), `RedirectController` plus a new page, the dashboard queries and pages, and 3 existing tests. Verified against a copy of the real database that old links still work. (Row 17)
 - **Enhancement:** a JSON API with OpenAPI docs, added as a new layer over the existing `LinkService`. The warning text moved from the form's controller into `UrlEndingChecker` so the form and API share it; the form's behaviour is unchanged and all earlier tests still pass. (Row 18)
-- **Bug fix:** custom codes had almost no rules, so an agent could create a link the client couldn't open (`reset password`, `help/login`). Fix: custom codes must be up to 12 letters, numbers and dashes, in both the form and the API. Existing links with old-style codes still open. (Row 20)
+- **Bug fix:** custom codes had almost no rules, so an agent could create a link the client couldn't open (`reset password`, `help/login`). Fix: custom codes must be up to 20 letters, numbers and dashes, in both the form and the API. Existing links with old-style codes still open. (Row 20)
 
 ### Ambiguous: what counts as an invalid URL?
 - **Options:** strict (allow only common endings), loose (allow anything), or warn.

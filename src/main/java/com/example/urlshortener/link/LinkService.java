@@ -18,7 +18,7 @@ public class LinkService {
     public static final int MAX_URLS = 5;
 
     /** The longest custom code an agent can choose. */
-    public static final int MAX_CODE_LENGTH = 12;
+    public static final int MAX_CODE_LENGTH = 20;
 
     /** Custom codes: letters, numbers and dashes only, 1 to {@value #MAX_CODE_LENGTH} characters. */
     private static final Pattern CUSTOM_CODE = Pattern.compile("[A-Za-z0-9-]{1," + MAX_CODE_LENGTH + "}");

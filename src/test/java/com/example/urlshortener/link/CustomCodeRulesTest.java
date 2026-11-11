@@ -21,13 +21,13 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.xpath;
 
-/** Custom codes: up to 12 characters, letters, numbers and dashes only. */
+/** Custom codes: up to 20 characters, letters, numbers and dashes only. */
 @SpringBootTest
 @AutoConfigureMockMvc
 class CustomCodeRulesTest {
 
     private static final String MESSAGE =
-            "Custom codes can be up to 12 characters, using only letters, numbers and dashes.";
+            "Custom codes can be up to 20 characters, using only letters, numbers and dashes.";
 
     @Autowired
     private LinkService linkService;
@@ -50,21 +50,21 @@ class CustomCodeRulesTest {
     // Check 1
     @Test
     void lettersNumbersAndDashesAreAllowed() {
-        linkService.create("example.com/reset", "reset-pw");
+        linkService.create("example.com/reset", "reset-password");
 
-        assertThat(repository.findByCode("reset-pw")).isPresent();
+        assertThat(repository.findByCode("reset-password")).isPresent();
     }
 
     // Check 2
     @Test
-    void twelveCharactersAllowedThirteenBlocked() {
-        linkService.create("example.com", "abcdefghij12");
-        assertThat(repository.findByCode("abcdefghij12")).isPresent();
+    void twentyCharactersAllowedTwentyOneBlocked() {
+        linkService.create("example.com", "abcdefghij1234567890");
+        assertThat(repository.findByCode("abcdefghij1234567890")).isPresent();
 
-        assertThatThrownBy(() -> linkService.create("example.com", "abcdefghij123"))
+        assertThatThrownBy(() -> linkService.create("example.com", "abcdefghij123456789034567890x"))
                 .isInstanceOf(InvalidCodeException.class)
                 .hasMessage(MESSAGE);
-        assertThat(repository.findByCode("abcdefghij123")).isEmpty();
+        assertThat(repository.findByCode("abcdefghij123456789034567890x")).isEmpty();
         assertThat(repository.count()).isEqualTo(1);
     }
 
@@ -111,9 +111,9 @@ class CustomCodeRulesTest {
     // Check 6
     @Test
     void existingLinkWithAnOldStyleCodeStillOpens() throws Exception {
-        repository.save(new ShortLink("an_old_code_longer_than_12", "https://example.com"));
+        repository.save(new ShortLink("an_old_code_with_underscores_and_over_20", "https://example.com"));
 
-        mvc.perform(get("/an_old_code_longer_than_12"))
+        mvc.perform(get("/an_old_code_with_underscores_and_over_20"))
                 .andExpect(status().isFound())
                 .andExpect(redirectedUrl("https://example.com"));
     }

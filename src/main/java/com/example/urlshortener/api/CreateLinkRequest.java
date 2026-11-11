@@ -11,7 +11,7 @@ public record CreateLinkRequest(
                 schema = @Schema(example = "google.com"))
         List<String> urls,
 
-        @Schema(description = "Optional custom code, e.g. \"reset\": up to 12 letters, numbers and dashes. Omit for a random 6-character code.",
+        @Schema(description = "Optional custom code, e.g. \"reset\": up to 20 letters, numbers and dashes. Omit for a random 6-character code.",
                 example = "reset", nullable = true)
         String customCode,
 
