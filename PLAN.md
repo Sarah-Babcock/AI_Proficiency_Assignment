@@ -2,7 +2,7 @@ This product is a url shortener that is being used to make communication with cl
 
 The system is used by client support who would like the urls shortened so that when communicating via email or over the phone it is easier to communicate where the client needs to go in the url when helping the client debug an issue. I would ask the product owner what kind of analytics are most important and how best would they be displayed? In a dashboard? Frequency of which sites are being visited? Frequency of when the sites are being visited? Do links ever expire? Should the shortened url be random or should the person creating the shortened url be able to create what they want the wording to be? What is an invaid url? Should the url be confirmed that it is a valid site before the url is shortened? 
 
-The features include a url shortener that takes a url and allows the customer to either generate what they want their shortened url to be or shortens it for them randomly. It should look for confusing scenarios such as 0o and lI when generating randomly. This initial version should include analytics that keep track of how many times a specific url is shortened
+The features include a url shortener that takes a url and allows the customer to either generate what they want their shortened url to be or shortens it for them randomly. It should look for confusing scenarios such as 0o and lI when generating randomly. This initial version should include analytics that keep track of how many times a specific url is visited
 
 
 
@@ -51,5 +51,5 @@ Each step depends on the one before it: the redirect needs stored links to look 
   - Known bug to fix here (found while testing the redirect): a URL typed without `https://` (e.g. `google.com`) sends the client to `localhost:8080/google.com`, which shows "This page doesn't exist".
 - **Ambiguous:** what counts as an invalid URL?
   - Options: strict (only common endings like .com, .org, .gov), loose (allow anything), or warn.
-  - Chose **warn**: create the link anyway, but show an "Are you sure this is what you meant?" confirmation for unusual endings.
+  - Chose **warn**: for unusual endings, show an "Are you sure this is what you meant?" confirmation before creating the link; it's created only if the agent confirms.
   - Why: strict would block real sites support may need (.io, .co.uk, internal pages); warning still catches typos before the agent reads a bad link to the client.

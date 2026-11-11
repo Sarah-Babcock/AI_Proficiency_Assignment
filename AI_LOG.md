@@ -32,8 +32,8 @@ Fill this in as you go, not at the end. One row per AI task.
 |----------|----------------------|----------------------|
 | What analytics to track | Times a URL is shortened; times a short link is visited | Visits, so we can see how useful support's short links are and how often clients use them |
 | What goes in v1 | Form only; form + redirect; all four features | Form + redirect; without the redirect every short link gives the client an error |
-| What counts as an invalid URL | Strict (only common endings like .com); loose (allow anything); warn | Warn: create the link but ask "Are you sure?" for unusual endings, so real sites aren't blocked and typos are still caught |
-| Language / framework | <!-- other options you considered, if any --> | Java + Spring Boot. Why: it's what I use in my current role and I'm familiar with it |
+| What counts as an invalid URL | Strict (only common endings like .com); loose (allow anything); warn | Warn: for unusual endings, ask "Are you sure?" before creating the link, and create it only if the agent confirms, so real sites aren't blocked and typos are still caught |
+| Language / framework | Java + Spring Boot | Java + Spring Boot. Why: they're what I'm most familiar with and have used in my current job |
 | Where to store links | In memory; local file database | Local file database in the project folder, so links still work after the app restarts (a client may call back the next day) |
 | Random code format | Length 4–8; mixed case vs. one case; which characters to leave out | 6 characters, mixed case, without `0` `O` `o` `1` `l` `I` (56 characters, about 30 billion codes). Trade-off: capital vs. lowercase can be confusing on the phone; accepted for v1, could change later |
 | When a code is already taken | Block it; overwrite the old link; regenerate | Custom code: block it and tell the agent "already taken". Why: we don't want to override another support agent's short URL. Random code: quietly regenerate, because the agent didn't choose it and an error would only confuse them |
@@ -42,7 +42,7 @@ Fill this in as you go, not at the end. One row per AI task.
 | Version control | No git; git with one commit per task | Git, one commit per task, so every change can be reviewed and undone. Started late, so rows 1-15 share one snapshot commit |
 | Multi-URL links | Exactly 3; up to N | Up to 5; 1 URL behaves exactly as before |
 | Splitting multiple URLs | Any comma + new lines; only ", " + new lines | Any comma + new lines: simple for agents. Trade-off: a URL containing a comma gets split |
-| Visits to a multi-URL link | Count once for the link only; +1 for each URL too | 1 for the short link, and +1 for each of its URLs in "By long URL" |
-| Custom code rules | Any characters; letters, numbers and dashes with a length limit | Up to 20 characters (first 12, raised to 20 after review), letters, numbers and dashes only. Why: <!-- your reason --> |
+| Visits to a multi-URL link | Count once for the link only; +1 for each URL too | 1 for the short link, and +1 for each of its URLs in "By long URL". Why: Opening a 3-URL link still opens each URL, so each one's visit should be tracked |
+| Custom code rules | Any characters; letters, numbers and dashes with a length limit | Up to 20 characters (first 12, raised to 20 after review), letters, numbers and dashes only. Why: I chose only letters, numbers and dashes to limit the complexity of the short URL, so there are fewer chances for communication errors than if more characters were allowed |
 | Expiring short links after 24 hours so codes can be reused | Build it now; leave it | Left out for now |
 | API and unusual URL endings | (a) reject unless "confirmed": true; (b) create and include a warning | (a): same rule as the web form, and a program calling the API won't read a warning, so a typo would quietly become a live link |

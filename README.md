@@ -148,13 +148,15 @@ I planned first ([PLAN.md](PLAN.md)): who uses the system, the end-to-end flow, 
 | Random code already taken | Quietly regenerate | The agent didn't choose it, so an error would only confuse them |
 | Redirect type | 302 (temporary), not 301 | Browsers cache 301s and skip the server, which would make visit counts too low |
 | Invalid URLs | Warn and ask for confirmation, rather than block or allow silently | Real sites with other endings (e.g. `.co.uk`) still work, and typos are caught before the agent reads a bad link to a client |
-| Custom code rules | Up to 20 characters: letters, numbers and dashes only | <!-- your reason --> |
+| Custom code rules | Up to 20 characters: letters, numbers and dashes only | I chose only letters, numbers and dashes to limit the complexity of the short URL, so there are fewer chances for communication errors than if more characters were allowed |
 | Reserved codes `dashboard`, `swagger-ui.html` | Blocked as custom codes | A short link at those addresses could never be reached, because an app page already uses them |
 | Multi-URL links | Up to 5 URLs, split by new lines or any comma | Simple for agents; 1 URL behaves exactly as before |
-| Visits to a multi-URL link | 1 for the short link, +1 for each of its URLs in "By long URL" | <!-- your reason --> |
+| Visits to a multi-URL link | 1 for the short link, +1 for each of its URLs in "By long URL" | Opening a 3-URL link still opens each URL, so each one's visit should be tracked |
 | API and unusual endings | Reject unless `"confirmed": true` | Same rule as the form, and a program calling the API won't read a warning, so a typo would quietly become a live link |
 
-<!-- What I'd do differently: in your own words, e.g. whether you would design the API before the web form next time, and why you built it in this order. -->
+### What I'd do differently
+
+Looking back, I would be more organized about my requirements and think them through more specifically up front. I didn't know what a URL shortener was when I started, so I first had AI build a web application from scratch so I could read the code and understand what was happening. Then I rebuilt the application step by step with AI, and enhanced it with AI as well, this time understanding what a URL shortener was.
 
 ---
 
