@@ -6,6 +6,8 @@ A support agent pastes a long URL (or up to 5 of them) into a web page and eithe
 
 Planning notes are in [PLAN.md](PLAN.md). Every AI-assisted task, its acceptance criteria and my review result are in [AI_LOG.md](AI_LOG.md).
 
+This README was drafted with AI from my plan, decision log and code; I reviewed and edited it. See [How I used AI](#how-i-used-ai).
+
 ### For reviewers: deliverables
 
 - **Working prototype** → [Setup](#setup) (build and run with two commands)
@@ -21,7 +23,7 @@ Planning notes are in [PLAN.md](PLAN.md). Every AI-assisted task, its acceptance
 | 1. Requirement understanding | [PLAN.md](PLAN.md) (my questions for the product owner), [Assumptions](#assumptions), [Ambiguous scenario](#ambiguous-what-counts-as-an-invalid-url) |
 | 2. Task decomposition | [Greenfield](#greenfield-v1-built-from-scratch) (build order and dependencies), [PLAN.md](PLAN.md) |
 | 3. Codebase reasoning (brownfield) | [Brownfield](#brownfield-debugging-and-enhancing-the-existing-code) (impacted modules per change), [Data model](#data-model) |
-| 4. AI-assisted execution | [AI_LOG.md](AI_LOG.md): every task's acceptance criteria and Accepted / Edited / Rejected result with my reasoning; [Execution approach](#execution-approach) |
+| 4. AI-assisted execution | [How I used AI](#how-i-used-ai), [AI_LOG.md](AI_LOG.md): every task's acceptance criteria and Accepted / Edited / Rejected result with my reasoning; [Execution approach](#execution-approach) |
 | 5. Engineering output | Code in `src/`, [API](#api) and [docs/openapi.json](docs/openapi.json), [Data model](#data-model), [Testing approach](#testing-approach) |
 | 6. Validation and risk control | [Testing approach](#testing-approach), [Limitations and trade-offs](#limitations-and-trade-offs), validation under each [scenario](#the-three-scenarios) |
 | 7. Controlled oversight | [AI_LOG.md](AI_LOG.md): I set the criteria and signed off every task; one git commit per task |
@@ -179,6 +181,24 @@ I planned first ([PLAN.md](PLAN.md)): who uses the system, the end-to-end flow, 
 ### What I'd do differently
 
 Looking back, I would be more organized about my requirements and think them through more specifically up front. I didn't know what a URL shortener was when I started, so I first had AI build a web application from scratch so I could read the code and understand what was happening. Then I rebuilt the application step by step with AI, and enhanced it with AI as well, this time understanding what a URL shortener was.
+
+---
+
+## How I used AI
+
+I used AI by first generating a URL shortener to understand what I was being asked to do. Then I had AI help me break down the assignment and ask me questions about what I thought would be important in a URL shortener, and come up with what a product manager might ask of me. I also had AI document my notes in README.md, PLAN.md and AI_LOG.md.
+
+**Building the code.** I rebuilt the app one small task at a time. For each task I said what to build and what "done" meant (my acceptance criteria), the AI wrote the code and the tests for those criteria, and I reviewed the result before moving on. Each task is a row in [AI_LOG.md](AI_LOG.md) and, from row 16 on, its own git commit.
+
+**Where I changed or rejected the AI's work.**
+- I had a 10-attempt retry limit removed, because I hadn't asked for it and didn't need it for v1 (row 7).
+- I had an extra test check removed so the tests matched my criteria (row 6).
+- I first limited custom codes to 12 characters, then raised it to 20 after review (row 20).
+- The AI once reported a passing build when 4 tests had actually errored. After that, I checked the full test summary every time (row 8).
+
+**How I checked its work.** Every acceptance criterion became an automated test, and the full suite (75 tests) runs on every change. Where tests can't tell, I checked by hand in the browser: the Copy button, opening real sites, links surviving a restart, Open all, and the API in Swagger. A task is only marked Accepted in AI_LOG after I've checked it.
+
+**Keeping it safe.** No real client data, passwords or secrets were involved; all testing used made-up links. I kept my personal email out of the public repo by committing with GitHub's private address, and I didn't commit the assignment brief, which is marked internal.
 
 ---
 

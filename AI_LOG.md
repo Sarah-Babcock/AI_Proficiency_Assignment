@@ -27,6 +27,7 @@ Fill this in as you go, not at the end. One row per AI task.
 | 21 | 2026-11-11 | Restructure the README's three scenarios to show decomposition, execution and validation | Uses only facts from my plan, AI_LOG and the code; nothing invented | Pending: my review | AI reorganized existing material and added impacted modules per brownfield change |
 | 22 | 2026-11-11 | Add a "For reviewers" map (brief requirement → README section) and draft an Assumptions section | Map points only to sections that exist; assumptions come from my plan and decisions, and any AI inference is flagged for me to confirm | Accepted | AI flagged 4 of the 9 assumptions as its own inferences from the code (single team on one server, trusted internal network, wording of the usual-endings assumption, every visit counts); I reviewed all 9 and kept them |
 | 23 | 2026-11-11 | Add a deliverables list at the top of the README, linking each deliverable in the brief to its section | One line per deliverable; links point only to sections that exist | Pending: my review | |
+| 24 | 2026-11-11 | Add a disclosure line and a "How I used AI" section to the README | First paragraph is my own words; the rest uses only facts from AI_LOG and this project | Pending: my review | I wrote the first paragraph. At my request, AI added the paragraphs on building the code, changes and rejections, checking, and safety, from facts already in AI_LOG |
 
 ## Decisions I made
 
