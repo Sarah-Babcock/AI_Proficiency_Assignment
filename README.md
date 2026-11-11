@@ -160,20 +160,66 @@ I planned first ([PLAN.md](PLAN.md)): who uses the system, the end-to-end flow, 
 
 ## The three scenarios
 
+Each scenario follows the same loop: I break the work into small tasks, the AI drafts one task at a time against acceptance criteria I set, and I validate the result with automated tests and hand checks before accepting it. Row numbers refer to [AI_LOG.md](AI_LOG.md).
+
 ### Greenfield: v1, built from scratch
-The shorten form, with custom or random codes, and the redirect. Then visit tracking and the dashboard. See AI_LOG rows 4–11.
+
+**Decomposition.** I split the product into five steps, ordered by dependency, because each step needs the one before it ([PLAN.md](PLAN.md), Build order):
+
+| Step | Task | Row |
+|------|------|-----|
+| 0 | Storage: save a short code with its long URL | 5 |
+| 1 | Shorten form: code generator, then saving with a custom or random code, then the page | 6, 7, 8 |
+| 2 | Redirect: short link → long URL, or "This page doesn't exist" | 9 |
+| 3 | Visit tracking | 10 |
+| 4 | Analytics dashboard | 11 |
+
+**Execution.** For each task I wrote the acceptance criteria first, the AI drafted the code and tests, and I reviewed the result. Where the AI went beyond what I asked, I decided what to keep. I had a 10-attempt retry cap removed (row 7) and an unrequested test check removed (row 6), and I kept a "Please enter a URL" message (row 8).
+
+**Validation.**
+- Automated tests for every acceptance criterion: 26 tests by the end of step 4.
+- Hand checks: the Copy button works, a link opens the real site, and a link still works after restarting the app (rows 8, 9).
+- Review caught a false "build passed" report: 4 new tests had actually errored (row 8).
+- Testing the redirect surfaced the `google.com` bug, which I left for the brownfield scenario (row 9).
 
 ### Brownfield: debugging and enhancing the existing code
-- **Bug fix:** a URL typed without `https://`, such as `google.com`, sent the client to `localhost:8080/google.com`, which showed "This page doesn't exist." I found it while testing the redirect and deliberately left it for this scenario. **Fix:** add `https://` when saving, and also when redirecting, so links saved before the fix work too. (Row 12)
-- **Enhancement:** a dashboard view by long URL that lists every short link pointing to the same URL, with total visits. (Row 13)
-- **Enhancement:** one short link for up to 5 URLs, with an "Open all" page. Impacted: `ShortLink` (new extra-URL table, no migration for old links), `LinkService`, the form (now a text box that takes several URLs), `RedirectController` plus a new page, the dashboard queries and pages, and 3 existing tests. Verified against a copy of the real database that old links still work. (Row 17)
-- **Enhancement:** a JSON API with OpenAPI docs, added as a new layer over the existing `LinkService`. The warning text moved from the form's controller into `UrlEndingChecker` so the form and API share it; the form's behaviour is unchanged and all earlier tests still pass. (Row 18)
-- **Bug fix:** custom codes had almost no rules, so an agent could create a link the client couldn't open (`reset password`, `help/login`). Fix: custom codes must be up to 20 letters, numbers and dashes, in both the form and the API. Existing links with old-style codes still open. (Row 20)
+
+**Decomposition.** One bug found during greenfield testing, one bug found when reviewing the app against the brief's security criteria, and three enhancements. Each is a separate task, sized so it can be reviewed on its own; from row 16 on, each is also a separate git commit, so it can be undone on its own.
+
+| Change | Type | Impacted | Row |
+|--------|------|----------|-----|
+| URLs typed without `https://` redirect to the wrong place | Bug fix | `UrlNormalizer` (new), `LinkService` (on save), `RedirectController` (on redirect, so old links work too) | 12 |
+| Dashboard view by long URL | Enhancement | `LongUrlSummary` (new), `DashboardController`, `dashboard.html` | 13 |
+| One short link for up to 5 URLs, with an "Open all" page | Enhancement | `ShortLink` (new extra-URL table, no migration for old links), `LinkService`, form (now a text box), `RedirectController` + new page, dashboard queries and pages, 3 existing tests | 17 |
+| JSON API with OpenAPI docs | Enhancement | New `api` package over the existing `LinkService`; warning text moved into `UrlEndingChecker` so the form and API share it | 18 |
+| Custom codes the client can't open (`reset password`, `help/login`) | Bug fix | `LinkService`, form, API error handling | 20 |
+
+**Execution.** Every change was built on top of the working app without changing its existing behaviour. For changes that touch stored data, I decided how old data should behave: old `google.com` links are fixed when opened (row 12), single-URL links keep working with the new extra-URL table (row 17), and old-style custom codes still open (row 20).
+
+**Validation.**
+- The full test suite re-runs on every change, so earlier behaviour is checked each time: 31 → 33 → 53 → 63 → 75 tests.
+- New tests for old data: an old `google.com` link (row 12), and an old code that breaks the new rule (row 20).
+- The multi-URL change was also checked against a copy of my real database, so old links still work (row 17).
+- Review changed one requirement: I first limited custom codes to 12 characters, then raised the limit to 20 (row 20).
 
 ### Ambiguous: what counts as an invalid URL?
+
+**Decomposition.** The requirement "reject invalid URLs" doesn't say what invalid means. I broke it into three questions:
+1. Which options are there?
+2. Which one fits support agents?
+3. Which endings count as usual?
+
 - **Options:** strict (allow only common endings), loose (allow anything), or warn.
-- **Chosen:** **warn.** Usual endings (`.com .org .gov .net .edu .io`) are created immediately. Anything else shows *"Are you sure this is what you meant?"*, and the agent either fixes the URL or clicks **Yes, create it**.
-- **Evidence it was the right call:** while testing, `google.cm`, which looks like a typo, turned out to be a real site (Google Cameroon). Strict rules would have blocked it. (Row 14)
+- **Chosen:** **warn**. Real sites with other endings still work, and typos are caught before the agent reads a bad link to a client.
+- **Usual endings:** `.com .org .gov .net .edu .io`.
+
+**Execution.** Usual endings are created immediately. Anything else shows *"Are you sure this is what you meant?"*, and the agent either fixes the URL or clicks **Yes, create it** (row 14). When the API was added, I applied the same rule there: the request is rejected unless it includes `"confirmed": true` (row 18).
+
+**Validation.**
+- 5 automated checks: usual endings, unusual endings, confirming, capitalization and paths, and no ending at all.
+- I also tried it by hand in the browser.
+- The AI caught a bug in its own draft: the confirm button came before Generate, so pressing Enter after fixing a typo would have confirmed the old URL. It moved the button and added a test.
+- **Evidence it was the right call:** `google.cm`, which looks like a typo, turned out to be a real site (Google Cameroon). Strict rules would have blocked it.
 
 ---
 
