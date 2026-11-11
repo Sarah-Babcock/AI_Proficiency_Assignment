@@ -61,10 +61,10 @@ class CustomCodeRulesTest {
         linkService.create("example.com", "abcdefghij1234567890");
         assertThat(repository.findByCode("abcdefghij1234567890")).isPresent();
 
-        assertThatThrownBy(() -> linkService.create("example.com", "abcdefghij123456789034567890x"))
+        assertThatThrownBy(() -> linkService.create("example.com", "abcdefghij1234567890x"))
                 .isInstanceOf(InvalidCodeException.class)
                 .hasMessage(MESSAGE);
-        assertThat(repository.findByCode("abcdefghij123456789034567890x")).isEmpty();
+        assertThat(repository.findByCode("abcdefghij1234567890x")).isEmpty();
         assertThat(repository.count()).isEqualTo(1);
     }
 
