@@ -2,6 +2,8 @@ package com.example.urlshortener.link;
 
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
 import java.util.Set;
@@ -35,5 +37,23 @@ public final class UrlEndingChecker {
         }
         String ending = host.substring(host.lastIndexOf('.') + 1).toLowerCase(Locale.ROOT);
         return USUAL_ENDINGS.contains(ending) ? Optional.empty() : Optional.of(ending);
+    }
+
+    /**
+     * One message naming every URL with an unusual (or missing) ending, or empty if all are usual.
+     * Used by both the web form and the API, so the rule and wording are the same everywhere.
+     */
+    public static Optional<String> warningFor(List<String> urls) {
+        List<String> problems = new ArrayList<>();
+        for (String url : urls) {
+            String trimmed = url.trim();
+            unusualEnding(trimmed).ifPresent(ending -> problems.add(ending.isEmpty()
+                    ? "\"" + trimmed + "\" doesn't have an ending like .com."
+                    : "\"" + trimmed + "\" has an unusual ending (." + ending + ")."));
+        }
+        if (problems.isEmpty()) {
+            return Optional.empty();
+        }
+        return Optional.of("Are you sure this is what you meant? " + String.join(" ", problems));
     }
 }

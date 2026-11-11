@@ -20,7 +20,7 @@ public class LinkService {
      * Codes the app uses for its own pages. A short link with one of these codes could never
      * be reached, because the page would take over that address.
      */
-    static final Set<String> RESERVED_CODES = Set.of("dashboard");
+    static final Set<String> RESERVED_CODES = Set.of("dashboard", "swagger-ui.html");
 
     private final ShortLinkRepository repository;
     private final CodeGenerator codeGenerator;

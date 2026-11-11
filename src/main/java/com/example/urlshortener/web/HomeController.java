@@ -13,7 +13,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -52,7 +51,7 @@ public class HomeController {
 
         // Unusual ending (often a typo): ask the agent to confirm before creating the link.
         if (!confirmed) {
-            Optional<String> warning = unusualEndingWarning(urls);
+            Optional<String> warning = UrlEndingChecker.warningFor(urls);
             if (warning.isPresent()) {
                 model.addAttribute("warning", warning.get());
                 return "home";
@@ -73,19 +72,5 @@ public class HomeController {
             model.addAttribute("error", e.getMessage());
         }
         return "home";
-    }
-
-    /** Builds one warning naming every URL with an unusual (or missing) ending, or empty if none. */
-    private static Optional<String> unusualEndingWarning(List<String> urls) {
-        List<String> problems = new ArrayList<>();
-        for (String url : urls) {
-            UrlEndingChecker.unusualEnding(url).ifPresent(ending -> problems.add(ending.isEmpty()
-                    ? "\"" + url + "\" doesn't have an ending like .com."
-                    : "\"" + url + "\" has an unusual ending (." + ending + ")."));
-        }
-        if (problems.isEmpty()) {
-            return Optional.empty();
-        }
-        return Optional.of("Are you sure this is what you meant? " + String.join(" ", problems));
     }
 }
