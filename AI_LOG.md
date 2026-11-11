@@ -38,7 +38,7 @@ Fill this in as you go, not at the end. One row per AI task.
 | Random code format | Length 4–8; mixed case vs. one case; which characters to leave out | 6 characters, mixed case, without `0` `O` `o` `1` `l` `I` (56 characters, about 30 billion codes). Trade-off: capital vs. lowercase can be confusing on the phone; accepted for v1, could change later |
 | When a code is already taken | Block it; overwrite the old link; regenerate | Custom code: block it and tell the agent "already taken". Why: we don't want to override another support agent's short URL. Random code: quietly regenerate, because the agent didn't choose it and an error would only confuse them |
 | Bug: URLs without `https://` redirect to the wrong place | Fix it now; leave it for the brownfield scenario | Leave it for the brownfield scenario, so the fix is shown as debugging and enhancing existing code |
-| Old links saved without `https://` | (a) fix them when opened; (b) fix only new links, recreate old ones by hand | (a). Why: <!-- your reason --> |
+| Old links saved without `https://` | (a) fix them when opened; (b) fix only new links, recreate old ones by hand | (a). Why: the client doesn't have to get a new link, and that short URL has already been used in the system |
 | Version control | No git; git with one commit per task | Git, one commit per task, so every change can be reviewed and undone. Started late, so rows 1-15 share one snapshot commit |
 | Multi-URL links | Exactly 3; up to N | Up to 5; 1 URL behaves exactly as before |
 | Splitting multiple URLs | Any comma + new lines; only ", " + new lines | Any comma + new lines: simple for agents. Trade-off: a URL containing a comma gets split |
