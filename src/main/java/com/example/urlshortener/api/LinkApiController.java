@@ -4,6 +4,7 @@ import com.example.urlshortener.link.LinkService;
 import com.example.urlshortener.link.ShortLink;
 import com.example.urlshortener.link.ShortLinkRepository;
 import com.example.urlshortener.link.UrlEndingChecker;
+import com.example.urlshortener.link.WebAddressRule;
 import com.example.urlshortener.link.UrlNormalizer;
 import com.example.urlshortener.visit.Visit;
 import com.example.urlshortener.visit.VisitRepository;
@@ -52,7 +53,7 @@ public class LinkApiController {
             description = "1 to 5 URLs. A URL with an unusual ending (anything but .com .org .gov .net .edu .io) "
                     + "is rejected unless \"confirmed\" is true.")
     @ApiResponse(responseCode = "201", description = "Created")
-    @ApiResponse(responseCode = "400", description = "No URLs, more than 5 URLs, invalid custom code, unusual ending not confirmed, or malformed JSON",
+    @ApiResponse(responseCode = "400", description = "No URLs, more than 5 URLs, a URL that isn't http/https, invalid custom code, unusual ending not confirmed, or malformed JSON",
             content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     @ApiResponse(responseCode = "409", description = "Custom code already taken or reserved",
             content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
@@ -62,6 +63,7 @@ public class LinkApiController {
         if (urls.isEmpty()) {
             throw new ApiException(HttpStatus.BAD_REQUEST, "no_urls", "Please provide at least one URL in \"urls\".");
         }
+        WebAddressRule.check(urls); // Not overridable by "confirmed"
         if (!Boolean.TRUE.equals(request.confirmed())) {
             UrlEndingChecker.warningFor(urls).ifPresent(warning -> {
                 throw new ApiException(HttpStatus.BAD_REQUEST, "unusual_url_ending",

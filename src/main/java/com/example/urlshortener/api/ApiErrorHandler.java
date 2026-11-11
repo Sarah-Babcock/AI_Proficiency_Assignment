@@ -3,6 +3,7 @@ package com.example.urlshortener.api;
 import com.example.urlshortener.link.CodeTakenException;
 import com.example.urlshortener.link.InvalidCodeException;
 import com.example.urlshortener.link.TooManyUrlsException;
+import com.example.urlshortener.link.UnsupportedUrlException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
@@ -26,6 +27,11 @@ class ApiErrorHandler {
     @ExceptionHandler(InvalidCodeException.class)
     ResponseEntity<ErrorResponse> invalidCode(InvalidCodeException e) {
         return ResponseEntity.badRequest().body(new ErrorResponse("invalid_code", e.getMessage()));
+    }
+
+    @ExceptionHandler(UnsupportedUrlException.class)
+    ResponseEntity<ErrorResponse> unsupportedUrl(UnsupportedUrlException e) {
+        return ResponseEntity.badRequest().body(new ErrorResponse("unsupported_url", e.getMessage()));
     }
 
     @ExceptionHandler(CodeTakenException.class)

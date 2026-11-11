@@ -36,8 +36,8 @@
                     "required": true
                 },
                 "responses": {
-                    "400": {
-                        "description": "No URLs, more than 5 URLs, invalid custom code, unusual ending not confirmed, or malformed JSON",
+                    "409": {
+                        "description": "Custom code already taken or reserved",
                         "content": {
                             "*/*": {
                                 "schema": {
@@ -46,8 +46,8 @@
                             }
                         }
                     },
-                    "409": {
-                        "description": "Custom code already taken or reserved",
+                    "400": {
+                        "description": "No URLs, more than 5 URLs, a URL that isn't http/https, invalid custom code, unusual ending not confirmed, or malformed JSON",
                         "content": {
                             "*/*": {
                                 "schema": {

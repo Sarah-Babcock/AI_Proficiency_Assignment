@@ -5,6 +5,8 @@ import com.example.urlshortener.link.InvalidCodeException;
 import com.example.urlshortener.link.LinkService;
 import com.example.urlshortener.link.ShortLink;
 import com.example.urlshortener.link.TooManyUrlsException;
+import com.example.urlshortener.link.UnsupportedUrlException;
+import com.example.urlshortener.link.WebAddressRule;
 import com.example.urlshortener.link.UrlEndingChecker;
 import com.example.urlshortener.link.UrlListParser;
 import org.springframework.stereotype.Controller;
@@ -47,6 +49,14 @@ public class HomeController {
         List<String> urls = UrlListParser.parse(longUrl);
         if (urls.isEmpty()) {
             model.addAttribute("error", "Please enter a URL to shorten.");
+            return "home";
+        }
+
+        // Not a web address (e.g. "javascript:" or "file:"): blocked, and "Yes, create it" can't override it.
+        try {
+            WebAddressRule.check(urls);
+        } catch (UnsupportedUrlException e) {
+            model.addAttribute("error", e.getMessage());
             return "home";
         }
 

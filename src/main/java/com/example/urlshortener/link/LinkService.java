@@ -48,6 +48,7 @@ public class LinkService {
      * @param longUrls   where the short link should send the client (1 to {@value #MAX_URLS});
      *                   https:// is added where missing, and duplicates are dropped
      * @param customCode the code the agent typed, or null/blank to get a random one
+     * @throws UnsupportedUrlException if any URL is not a web address (http:// or https://)
      * @throws TooManyUrlsException if there are more than {@value #MAX_URLS} different URLs
      * @throws InvalidCodeException if the custom code is too long or has characters other than letters, numbers and dashes
      * @throws CodeTakenException   if the custom code is reserved or already used by another link
@@ -57,6 +58,7 @@ public class LinkService {
         if (urls.isEmpty()) {
             throw new IllegalArgumentException("At least one URL is required");
         }
+        WebAddressRule.check(urls);
         if (urls.size() > MAX_URLS) {
             throw new TooManyUrlsException(MAX_URLS);
         }

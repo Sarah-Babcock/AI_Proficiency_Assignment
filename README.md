@@ -83,12 +83,13 @@ Data is stored in `data/urlshortener.mv.db`. Delete that file to start with an e
 | | `CodeGenerator` | Random 6-character codes without easily confused characters |
 | | `UrlListParser` | Splits the form's box into URLs by new lines and commas |
 | | `UrlNormalizer` | Adds `https://` when the agent leaves it off |
+| | `WebAddressRule` | Security: only `http://` and `https://` URLs can be shortened or opened; shared by the form, the API and the redirect |
 | | `UrlEndingChecker` | Flags unusual endings (anything other than .com .org .gov .net .edu .io); shared by the form and the API |
 | Visits | `VisitTracker` | Records one visit per opening of a short link |
 | | `VisitRepository`, `LinkSummary`, `LongUrlSummary` | Dashboard queries: counts per link (including 0) and grouped by long URL |
 | Storage | `ShortLink`, `Visit`, plus repositories | H2 file database via Spring Data JPA (see [Data model](#data-model)) |
 
-The web form and the API are two front doors to the same `LinkService`, so every rule (the 5-URL limit, custom-code rules, taken and reserved codes, the unusual-ending check) works the same way in both.
+The web form and the API are two front doors to the same `LinkService`, so every rule (web addresses only, the 5-URL limit, custom-code rules, taken and reserved codes, the unusual-ending check) works the same way in both.
 
 **Tools:** Java 21, Spring Boot 3.3 (Web, Data JPA, Thymeleaf), springdoc-openapi (Swagger UI), H2 (file mode), JUnit 5, MockMvc, AssertJ, JaCoCo (coverage).
 
@@ -100,6 +101,7 @@ The web form and the API are two front doors to the same `LinkService`, so every
 Agent submits form ─► HomeController
     ├─ UrlListParser: split by new lines and commas, drop blanks
     ├─ no URLs? ───────────────────────────────► "Please enter a URL"
+    ├─ not http:// or https://? ───────────────► "Only web addresses..." (nothing saved; can't be overridden)
     ├─ unusual ending and not confirmed? ──────► warning + "Yes, create it" (nothing saved)
     └─ LinkService.create
          ├─ UrlNormalizer: add https:// if missing; drop duplicates
@@ -116,6 +118,7 @@ Agent submits form ─► HomeController
 ```
 Client opens /{code} ─► RedirectController
     ├─ code not found ─► 404 "This page doesn't exist"
+    ├─ single URL that isn't http/https (saved before the fix) ─► 404 "This page doesn't exist"
     └─ found ─► VisitTracker records the visit (link + time)
               ├─ 1 URL ─► 302 redirect to the long URL (https:// added if an old link lacks it)
               └─ 2–5 URLs ─► "Open all" page listing each URL
@@ -127,7 +130,7 @@ Full contract: [docs/openapi.json](docs/openapi.json) (OpenAPI 3). While the app
 
 | Endpoint | Success | Errors |
 |----------|---------|--------|
-| `POST /api/links` | **201** with `code`, `shortUrl`, `longUrls`, `createdAt`, and a `Location` header | **400** `no_urls`, `too_many_urls`, `invalid_code`, `unusual_url_ending`, `invalid_json`; **409** `code_taken` |
+| `POST /api/links` | **201** with `code`, `shortUrl`, `longUrls`, `createdAt`, and a `Location` header | **400** `no_urls`, `unsupported_url`, `too_many_urls`, `invalid_code`, `unusual_url_ending`, `invalid_json`; **409** `code_taken` |
 | `GET /api/links/{code}` | **200** with the link's details | **404** `not_found` |
 | `GET /api/links/{code}/visits` | **200** with `visitCount` and `visits` (times, newest first) | **404** `not_found` |
 
@@ -173,6 +176,7 @@ I planned first ([PLAN.md](PLAN.md)): who uses the system, the end-to-end flow, 
 | Redirect type | 302 (temporary), not 301 | Browsers cache 301s and skip the server, which would make visit counts too low |
 | Invalid URLs | Warn and ask for confirmation, rather than block or allow silently | Real sites with other endings (e.g. `.co.uk`) still work, and typos are caught before the agent reads a bad link to a client |
 | Custom code rules | Up to 20 characters: letters, numbers and dashes only | I chose only letters, numbers and dashes to limit the complexity of the short URL, so there are fewer chances for communication errors than if more characters were allowed |
+| Allowed URL types | Only `http://` and `https://`; can't be overridden | A short link should only ever send a client to a web page. Other types (`javascript:`, `file:`, `ftp:`) could run code in the client's browser or open something on their computer |
 | Reserved codes `dashboard`, `swagger-ui.html` | Blocked as custom codes | A short link at those addresses could never be reached, because an app page already uses them |
 | Multi-URL links | Up to 5 URLs, split by new lines or any comma | Simple for agents; 1 URL behaves exactly as before |
 | Visits to a multi-URL link | 1 for the short link, +1 for each of its URLs in "By long URL" | Opening a 3-URL link still opens each URL, so each one's visit should be tracked |
@@ -196,7 +200,7 @@ I used AI by first generating a URL shortener to understand what I was being ask
 - I first limited custom codes to 12 characters, then raised it to 20 after review (row 20).
 - The AI once reported a passing build when 4 tests had actually errored. After that, I checked the full test summary every time (row 8).
 
-**How I checked its work.** Every acceptance criterion that could be automated became a test, and the full suite (75 tests) runs on every change. Where tests can't tell, I checked by hand in the browser: the Copy button, opening real sites, links surviving a restart, Open all, and the API in Swagger. A task is only marked Accepted in AI_LOG after I've checked it.
+**How I checked its work.** Every acceptance criterion that could be automated became a test, and the full suite (83 tests) runs on every change. Where tests can't tell, I checked by hand in the browser: the Copy button, opening real sites, links surviving a restart, Open all, and the API in Swagger. A task is only marked Accepted in AI_LOG after I've checked it.
 
 **Keeping it safe.** No real client data, passwords or secrets were involved; all testing used made-up links. I kept my personal email out of the public repo by committing with GitHub's private address, and I didn't commit the assignment brief, which is marked internal.
 
@@ -228,7 +232,7 @@ Each scenario follows the same loop: I break the work into small tasks, the AI d
 
 ### Brownfield: debugging and enhancing the existing code
 
-**Decomposition.** One bug found during greenfield testing, one bug found when reviewing the app against the brief's security criteria, and three enhancements. Each is a separate task, sized so it can be reviewed on its own; from row 16 on, each is also a separate git commit, so it can be undone on its own.
+**Decomposition.** One bug found during greenfield testing, two bugs found when reviewing the app against the brief's security criteria, and three enhancements. Each is a separate task, sized so it can be reviewed on its own; from row 16 on, each is also a separate git commit, so it can be undone on its own.
 
 | Change | Type | Impacted | Row |
 |--------|------|----------|-----|
@@ -237,12 +241,13 @@ Each scenario follows the same loop: I break the work into small tasks, the AI d
 | One short link for up to 5 URLs, with an "Open all" page | Enhancement | `ShortLink` (new extra-URL table, no migration for old links), `LinkService`, form (now a text box), `RedirectController` + new page, dashboard queries and pages, 3 existing tests | 17 |
 | JSON API with OpenAPI docs | Enhancement | New `api` package over the existing `LinkService`; warning text moved into `UrlEndingChecker` so the form and API share it | 18 |
 | Custom codes the client can't open (`reset password`, `help/login`) | Bug fix | `LinkService`, form, API error handling | 20 |
+| **Security:** a single-URL link could redirect to `javascript:`, `file:` or `ftp:` addresses (the Open all page already blocked them) | Bug fix | `WebAddressRule` (new; the Open all page's check moved here so all paths share it), `LinkService`, form, API, `RedirectController` | 27 |
 
-**Execution.** Every change was built on top of the working app without changing its existing behaviour. For changes that touch stored data, I decided how old data should behave: old `google.com` links are fixed when opened (row 12), single-URL links keep working with the new extra-URL table (row 17), and old-style custom codes still open (row 20).
+**Execution.** Every change was built on top of the working app without changing its existing behaviour. For changes that touch stored data, I decided how old data should behave: old `google.com` links are fixed when opened (row 12), single-URL links keep working with the new extra-URL table (row 17), old-style custom codes still open (row 20), and old links to non-web addresses stop redirecting (row 27).
 
 **Validation.**
-- The full test suite re-runs on every change, so earlier behaviour is checked each time: 31 → 33 → 53 → 63 → 75 tests.
-- New tests for old data: an old `google.com` link (row 12), and an old code that breaks the new rule (row 20).
+- The full test suite re-runs on every change, so earlier behaviour is checked each time: 31 → 33 → 53 → 63 → 75 → 83 tests.
+- New tests for old data: an old `google.com` link (row 12), an old code that breaks the new rule (row 20), and an old link to a `javascript:` address, which now shows "This page doesn't exist" (row 27).
 - The multi-URL change was also checked against a copy of my real database, so old links still work (row 17).
 - Review changed one requirement: I first limited custom codes to 12 characters, then raised the limit to 20 (row 20).
 
@@ -269,13 +274,13 @@ Each scenario follows the same loop: I break the work into small tasks, the AI d
 
 ## Testing approach
 
-**75 automated tests**, run with `./mvnw clean verify`. Most tests check an acceptance criterion I set before the code was written, and are labelled `// Check N` to match the AI_LOG row. The rest cover extras the AI added that I reviewed and kept (for example, the empty-URL message and malformed-JSON errors).
+**83 automated tests**, run with `./mvnw clean verify`. Most tests check an acceptance criterion I set before the code was written, and are labelled `// Check N` to match the AI_LOG row. The rest cover extras the AI added that I reviewed and kept (for example, the empty-URL message and malformed-JSON errors).
 
 | Level | What's covered | Examples |
 |-------|----------------|----------|
 | Unit | Pure logic, no Spring | `CodeGeneratorTest` (1,000 codes: length and banned characters), `UrlNormalizerTest`, `UrlEndingCheckerTest`, `UrlListParserTest` |
 | Integration (Spring + H2) | Saving and looking up links | `ShortLinkRepositoryTest`, `LinkServiceTest` (taken codes; a forced random-code clash regenerates) |
-| Web (MockMvc + test database) | Pages and redirects end to end | `HomeControllerTest`, `RedirectControllerTest`, `VisitTrackingTest`, `DashboardTest`, `MultiUrlTest`, `CustomCodeRulesTest` |
+| Web (MockMvc + test database) | Pages and redirects end to end | `HomeControllerTest`, `RedirectControllerTest`, `VisitTrackingTest`, `DashboardTest`, `MultiUrlTest`, `CustomCodeRulesTest`, `WebAddressRuleTest` |
 | API (MockMvc + test database) | JSON requests, status codes, error shape | `LinkApiTest` |
 
 Tests use their own database under `target/test-data/`, so they never touch real data.
