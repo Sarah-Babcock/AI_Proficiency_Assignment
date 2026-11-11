@@ -6,6 +6,14 @@ A support agent pastes a long URL (or up to 5 of them) into a web page and eithe
 
 Planning notes are in [PLAN.md](PLAN.md). Every AI-assisted task, its acceptance criteria and my review result are in [AI_LOG.md](AI_LOG.md).
 
+### For reviewers: deliverables
+
+- **Working prototype** → [Setup](#setup) (build and run with two commands)
+- **Architecture overview** → [Architecture](#architecture): [components and tools](#components), [control flow](#control-flow), [execution approach](#execution-approach), [key decisions](#key-decisions)
+- **Three scenarios**, each with decomposition, execution and validation → [Greenfield](#greenfield-v1-built-from-scratch), [Brownfield](#brownfield-debugging-and-enhancing-the-existing-code), [Ambiguous](#ambiguous-what-counts-as-an-invalid-url)
+- **Setup instructions** → [Setup](#setup)
+- **Testing approach, limitations and trade-offs** → [Testing approach](#testing-approach), [Limitations and trade-offs](#limitations-and-trade-offs)
+
 ### For reviewers: where to find each requirement
 
 | Requirement | Where |
