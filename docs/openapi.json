@@ -1,0 +1,251 @@
+{
+    "openapi": "3.0.1",
+    "info": {
+        "title": "OpenAPI definition",
+        "version": "v0"
+    },
+    "servers": [
+        {
+            "url": "http://localhost:8080",
+            "description": "Generated server url"
+        }
+    ],
+    "tags": [
+        {
+            "name": "Links",
+            "description": "Create short links and read their visit analytics"
+        }
+    ],
+    "paths": {
+        "/api/links": {
+            "post": {
+                "tags": [
+                    "Links"
+                ],
+                "summary": "Create a short link",
+                "description": "1 to 5 URLs. A URL with an unusual ending (anything but .com .org .gov .net .edu .io) is rejected unless \"confirmed\" is true.",
+                "operationId": "create",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/CreateLinkRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "409": {
+                        "description": "Custom code already taken or reserved",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "No URLs, more than 5 URLs, unusual ending not confirmed, or malformed JSON",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "201": {
+                        "description": "Created",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/LinkResponse"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/links/{code}": {
+            "get": {
+                "tags": [
+                    "Links"
+                ],
+                "summary": "Look up a short link",
+                "operationId": "get",
+                "parameters": [
+                    {
+                        "name": "code",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "404": {
+                        "description": "No link with that code",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "200": {
+                        "description": "Found",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/LinkResponse"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/links/{code}/visits": {
+            "get": {
+                "tags": [
+                    "Links"
+                ],
+                "summary": "Visit count and visit times for a short link",
+                "operationId": "visits",
+                "parameters": [
+                    {
+                        "name": "code",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "404": {
+                        "description": "No link with that code",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "200": {
+                        "description": "Found",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/VisitsResponse"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "components": {
+        "schemas": {
+            "CreateLinkRequest": {
+                "type": "object",
+                "properties": {
+                    "urls": {
+                        "type": "array",
+                        "description": "1 to 5 long URLs. https:// is added if missing.",
+                        "items": {
+                            "type": "string",
+                            "example": "google.com"
+                        }
+                    },
+                    "customCode": {
+                        "type": "string",
+                        "description": "Optional custom code, e.g. \"reset\". Omit for a random 6-character code.",
+                        "nullable": true,
+                        "example": "reset"
+                    },
+                    "confirmed": {
+                        "type": "boolean",
+                        "description": "Set to true to create the link even if a URL has an unusual ending (e.g. .cm).",
+                        "nullable": true,
+                        "default": false
+                    }
+                },
+                "description": "A request to create a short link"
+            },
+            "ErrorResponse": {
+                "type": "object",
+                "properties": {
+                    "error": {
+                        "type": "string",
+                        "description": "Machine-readable error type",
+                        "example": "code_taken"
+                    },
+                    "message": {
+                        "type": "string",
+                        "description": "Human-readable explanation",
+                        "example": "The code \"reset\" is already taken. Please choose another."
+                    }
+                },
+                "description": "Every API error has this shape"
+            },
+            "LinkResponse": {
+                "type": "object",
+                "properties": {
+                    "code": {
+                        "type": "string",
+                        "example": "k7Xp9m"
+                    },
+                    "shortUrl": {
+                        "type": "string",
+                        "example": "http://localhost:8080/k7Xp9m"
+                    },
+                    "longUrls": {
+                        "type": "array",
+                        "description": "Where the short link goes (1 to 5 URLs)",
+                        "items": {
+                            "type": "string",
+                            "description": "Where the short link goes (1 to 5 URLs)"
+                        }
+                    },
+                    "createdAt": {
+                        "type": "string",
+                        "format": "date-time"
+                    }
+                },
+                "description": "A short link"
+            },
+            "VisitsResponse": {
+                "type": "object",
+                "properties": {
+                    "code": {
+                        "type": "string",
+                        "example": "k7Xp9m"
+                    },
+                    "visitCount": {
+                        "type": "integer",
+                        "format": "int64",
+                        "example": 3
+                    },
+                    "visits": {
+                        "type": "array",
+                        "description": "When each visit happened (UTC), newest first",
+                        "items": {
+                            "type": "string",
+                            "description": "When each visit happened (UTC), newest first",
+                            "format": "date-time"
+                        }
+                    }
+                },
+                "description": "Visits to one short link"
+            }
+        }
+    }
+}
