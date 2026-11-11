@@ -6,6 +6,20 @@ A support agent pastes a long URL (or up to 5 of them) into a web page and eithe
 
 Planning notes are in [PLAN.md](PLAN.md). Every AI-assisted task, its acceptance criteria and my review result are in [AI_LOG.md](AI_LOG.md).
 
+### For reviewers: where to find each requirement
+
+| Requirement | Where |
+|---|---|
+| 1. Requirement understanding | [PLAN.md](PLAN.md) (my questions for the product owner), [Assumptions](#assumptions), [Ambiguous scenario](#ambiguous-what-counts-as-an-invalid-url) |
+| 2. Task decomposition | [Greenfield](#greenfield-v1-built-from-scratch) (build order and dependencies), [PLAN.md](PLAN.md) |
+| 3. Codebase reasoning (brownfield) | [Brownfield](#brownfield-debugging-and-enhancing-the-existing-code) (impacted modules per change), [Data model](#data-model) |
+| 4. AI-assisted execution | [AI_LOG.md](AI_LOG.md): every task's acceptance criteria and Accepted / Edited / Rejected result with my reasoning; [Execution approach](#execution-approach) |
+| 5. Engineering output | Code in `src/`, [API](#api) and [docs/openapi.json](docs/openapi.json), [Data model](#data-model), [Testing approach](#testing-approach) |
+| 6. Validation and risk control | [Testing approach](#testing-approach), [Limitations and trade-offs](#limitations-and-trade-offs), validation under each [scenario](#the-three-scenarios) |
+| 7. Controlled oversight | [AI_LOG.md](AI_LOG.md): I set the criteria and signed off every task; one git commit per task |
+| 8. Final engineering summary | [Key decisions](#key-decisions), [What I'd do differently](#what-id-do-differently), [Assumptions](#assumptions), [Limitations](#limitations-and-trade-offs) |
+| Run it | [Setup](#setup) |
+
 ---
 
 ## Setup
@@ -241,6 +255,22 @@ Tests use their own database under `target/test-data/`, so they never touch real
 **Hand checks** (things automated tests can't easily cover): the Copy button puts the link on the clipboard; a link made in the form opens the real site in a browser; links still work after restarting the app; "Open all" opens every tab; the dashboard looks right; the API works from Swagger UI.
 
 **Lesson from review:** once, the AI reported a passing build when 4 new tests had actually errored. After that, I checked the full test summary (`Tests run: N, Failures: 0, Errors: 0`) rather than trusting a short "OK."
+
+---
+
+## Assumptions
+
+There was no product owner to answer the questions in [PLAN.md](PLAN.md), so I made these assumptions. Each one would be confirmed with the product owner before production.
+
+- **Users:** the people creating links are internal client support agents. Clients only open short links; they never create them.
+- **How links are shared:** agents read links aloud over the phone or paste them into email, so short, easy-to-read codes matter more than anything else about the code.
+- **Analytics:** the useful measure is how often clients open support's links, not how often links are created.
+- **Scale and hosting:** a single support team on one server. A local file database is enough for the prototype.
+- **Access:** the app runs on a trusted internal network, so the prototype has no login.
+- **Link lifetime:** links don't expire, because a client may come back to a link days later.
+- **URLs:** agents share web pages (`http` or `https`). A URL typed without a scheme means `https://`.
+- **Usual endings:** most sites agents share end in `.com .org .gov .net .edu .io`; anything else is worth a second look, not a block.
+- **Visits:** every opening of a short link counts, including repeats by the same client.
 
 ---
 
