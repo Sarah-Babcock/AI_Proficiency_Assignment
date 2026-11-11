@@ -194,6 +194,19 @@ I used AI by first generating a URL shortener to understand what I was being ask
 
 **Building the code.** I rebuilt the app one small task at a time. For each task I said what to build and what "done" meant (my acceptance criteria), the AI wrote the code and the tests for those criteria, and I reviewed the result before moving on. Each task is a row in [AI_LOG.md](AI_LOG.md) and, from row 16 on, its own git commit.
 
+**Example prompts, and how I refined them.** My prompts were plain-language requests, followed by refinements after I saw the result:
+- Custom codes (row 20): *"It should be 12 characters or less and only include -, letters, and numbers."* After seeing it work, I refined it: *"How about 20 characters then."*
+- Multi-URL links (row 17): *"Can we enhance the product so we can shorten three links at the same time and it opens all three?"* When the AI asked how many and how to separate them, I refined it: *"Up to 5, be able to separate by comma and by line, yes each should get +1 visit."*
+- Setting a constraint (row 8): *"It should be a button they can choose if they want to do a custom code and then type it in, otherwise it defaults to randomly generated. Don't add the 10 attempt limit yet."*
+
+**High-impact changes and sign-off.** I treated changes that touch stored data or security as high-impact, because a mistake could break links clients already have:
+- Row 12: changed how every link redirects, including old ones.
+- Row 17: changed the database structure.
+- Row 20: added rules for codes, while existing links had to keep working.
+- Row 27: a security fix that blocks some existing links.
+
+For each one, my acceptance criteria included how existing links should behave, those were tested automatically, and I checked the change by hand before accepting it.
+
 **Where I changed or rejected the AI's work.**
 - I had a 10-attempt retry limit removed, because I hadn't asked for it and didn't need it for v1 (row 7).
 - I had an extra test check removed so the tests matched my criteria (row 6).
