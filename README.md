@@ -2,7 +2,7 @@
 
 A URL shortener for client support teams. Short links are easier to read to a client over the phone or paste into an email, which helps support direct clients to a specific screen while debugging an issue.
 
-A support agent pastes a long URL (or up to 5 of them) into a web page and either types a custom code or lets the app generate one. The app returns a short link like `http://localhost:8080/k7Xp9m`, and the agent copies it or reads it to the client. When the client opens the short link, the app records the visit and sends them to the long URL. If the link has several URLs, the client sees a page listing them, with an "Open all" button. Support managers can see on a dashboard which links clients actually use, and when. Other programs can do the same things through a JSON API.
+A support agent pastes a long URL (or up to 5 of them) into a web page and either types a custom code or lets the app generate one. The app returns a short link like `http://localhost:8080/k7Xp9m`, and the agent copies it or reads it to the client. When the client opens the short link, the app records the visit and sends them to the long URL. If the link has several URLs, the client sees a page listing them, with an "Open all" button. The support team can see on a dashboard which links clients actually use, and when. Other programs can do the same things through a JSON API.
 
 Planning notes are in [PLAN.md](PLAN.md). Every AI-assisted task, its acceptance criteria and my review result are in [AI_LOG.md](AI_LOG.md).
 
@@ -196,7 +196,7 @@ I used AI by first generating a URL shortener to understand what I was being ask
 - I first limited custom codes to 12 characters, then raised it to 20 after review (row 20).
 - The AI once reported a passing build when 4 tests had actually errored. After that, I checked the full test summary every time (row 8).
 
-**How I checked its work.** Every acceptance criterion became an automated test, and the full suite (75 tests) runs on every change. Where tests can't tell, I checked by hand in the browser: the Copy button, opening real sites, links surviving a restart, Open all, and the API in Swagger. A task is only marked Accepted in AI_LOG after I've checked it.
+**How I checked its work.** Every acceptance criterion that could be automated became a test, and the full suite (75 tests) runs on every change. Where tests can't tell, I checked by hand in the browser: the Copy button, opening real sites, links surviving a restart, Open all, and the API in Swagger. A task is only marked Accepted in AI_LOG after I've checked it.
 
 **Keeping it safe.** No real client data, passwords or secrets were involved; all testing used made-up links. I kept my personal email out of the public repo by committing with GitHub's private address, and I didn't commit the assignment brief, which is marked internal.
 
@@ -248,7 +248,7 @@ Each scenario follows the same loop: I break the work into small tasks, the AI d
 
 ### Ambiguous: what counts as an invalid URL?
 
-**Decomposition.** The requirement "reject invalid URLs" doesn't say what invalid means. I broke it into three questions:
+**Decomposition.** One of my questions in [PLAN.md](PLAN.md) was "What is an invalid URL?", and there's no single right answer. I broke it into three questions:
 1. Which options are there?
 2. Which one fits support agents?
 3. Which endings count as usual?
@@ -269,14 +269,14 @@ Each scenario follows the same loop: I break the work into small tasks, the AI d
 
 ## Testing approach
 
-**75 automated tests**, run with `./mvnw clean verify`. Each test maps to an acceptance criterion I set before the code was written. Most are labelled `// Check N` to match the AI_LOG row.
+**75 automated tests**, run with `./mvnw clean verify`. Most tests check an acceptance criterion I set before the code was written, and are labelled `// Check N` to match the AI_LOG row. The rest cover extras the AI added that I reviewed and kept (for example, the empty-URL message and malformed-JSON errors).
 
 | Level | What's covered | Examples |
 |-------|----------------|----------|
 | Unit | Pure logic, no Spring | `CodeGeneratorTest` (1,000 codes: length and banned characters), `UrlNormalizerTest`, `UrlEndingCheckerTest`, `UrlListParserTest` |
 | Integration (Spring + H2) | Saving and looking up links | `ShortLinkRepositoryTest`, `LinkServiceTest` (taken codes; a forced random-code clash regenerates) |
-| Web (MockMvc + real database) | Pages and redirects end to end | `HomeControllerTest`, `RedirectControllerTest`, `VisitTrackingTest`, `DashboardTest`, `MultiUrlTest`, `CustomCodeRulesTest` |
-| API (MockMvc + real database) | JSON requests, status codes, error shape | `LinkApiTest` |
+| Web (MockMvc + test database) | Pages and redirects end to end | `HomeControllerTest`, `RedirectControllerTest`, `VisitTrackingTest`, `DashboardTest`, `MultiUrlTest`, `CustomCodeRulesTest` |
+| API (MockMvc + test database) | JSON requests, status codes, error shape | `LinkApiTest` |
 
 Tests use their own database under `target/test-data/`, so they never touch real data.
 
